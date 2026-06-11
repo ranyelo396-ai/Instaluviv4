@@ -1127,528 +1127,582 @@
 </div>
 
 <script>
-// ============================================================
-// DATA STORE (LocalStorage)
-// ============================================================
-const DEFAULT_PRODUCTS = [
-  { id:'p1', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80', title:'Ventanas correderas', desc:'Diseño moderno y funcional que optimiza el espacio.' },
-  { id:'p2', img:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80', title:'Ventanas abatibles', desc:'Máxima hermeticidad y ventilación para tu hogar.' },
-  { id:'p3', img:'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=600&q=80', title:'Puertas correderas', desc:'Conecta tus espacios con elegancia y amplitud.' },
-  { id:'p4', img:'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=600&q=80', title:'Puertas de PVC', desc:'Seguridad, diseño y resistencia en cada detalle.' },
+// =============================================================
+// UTILIDADES LOCALSTORAGE — persiste todo entre recargas
+// =============================================================
+const LS = {
+  get(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch(_){ return def; } },
+  set(k, v)   { try { localStorage.setItem(k, JSON.stringify(v)); } catch(_){} }
+};
+
+// Defaults de ejemplo (solo se usan si no hay datos guardados)
+const DEF_PRODUCTS  = [
+  { id:'p1', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80', title:'Ventanas correderas',  desc:'Diseño moderno y funcional que optimiza el espacio.' },
+  { id:'p2', img:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80', title:'Ventanas abatibles',  desc:'Máxima hermeticidad y ventilación para tu hogar.' },
+  { id:'p3', img:'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=600&q=80', title:'Puertas correderas',   desc:'Conecta tus espacios con elegancia y amplitud.' },
+  { id:'p4', img:'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=600&q=80', title:'Puertas de PVC',      desc:'Seguridad, diseño y resistencia en cada detalle.' }
 ];
-const DEFAULT_GALLERY = [
+const DEF_GALLERY   = [
   { id:'g1', img:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80', desc:'Ventana panorámica residencial' },
-  { id:'g2', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80', desc:'Instalación en zona Rosa' },
-  { id:'g3', img:'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=800&q=80', desc:'Puerta corredera terraza' },
-  { id:'g4', img:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80', desc:'Sala luminosa' },
-  { id:'g5', img:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&q=80', desc:'Proyecto oficina Antiguo Cuscatlán' },
-  { id:'g6', img:'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=800&q=80', desc:'Puerta PVC entrada principal' },
-  { id:'g7', img:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80', desc:'Ventanas cocina moderna' },
-  { id:'g8', img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80', desc:'Proyecto comercial' },
+  { id:'g2', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',    desc:'Instalación en zona Rosa' },
+  { id:'g3', img:'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=800&q=80',    desc:'Puerta corredera terraza' },
+  { id:'g4', img:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80',    desc:'Sala luminosa' },
+  { id:'g5', img:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&q=80', desc:'Proyecto Antiguo Cuscatlán' },
+  { id:'g6', img:'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=800&q=80', desc:'Puerta PVC entrada principal' }
 ];
-const DEFAULT_NOVEDADES = [
-  { id:'n1', img:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80', tipo:'Nuevo producto', title:'Nueva línea de ventanas slim frame 2024', desc:'Perfiles más delgados, más luz y diseño minimalista.' },
-  { id:'n2', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80', tipo:'Promoción', title:'20% de descuento en instalación este mes', desc:'Aprovecha nuestra promoción especial de temporada.' },
-  { id:'n3', img:'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=600&q=80', tipo:'Noticia', title:'Completamos proyecto en Santa Tecla', desc:'500 metros cuadrados de ventanas y puertas PVC de alta gama.' },
-  { id:'n4', img:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80', tipo:'Nuevo proyecto', title:'Torre corporativa en San Benito', desc:'Iniciamos uno de nuestros proyectos más grandes.' },
-  { id:'n5', img:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=600&q=80', tipo:'Noticia', title:'Instaluvi certifica a su equipo en Europa', desc:'Capacitación internacional para instalar sistemas premium.' },
+const DEF_NOVEDADES = [
+  { id:'n1', img:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80', tipo:'Nuevo producto', title:'Nueva línea slim frame 2024',        desc:'Perfiles más delgados, más luz y diseño minimalista.' },
+  { id:'n2', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',    tipo:'Promoción',     title:'20% de descuento este mes',           desc:'Aprovecha nuestra promoción especial de temporada.' },
+  { id:'n3', img:'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=600&q=80',    tipo:'Noticia',       title:'Proyecto completado en Santa Tecla',  desc:'500 m² de ventanas y puertas PVC de alta gama.' },
+  { id:'n4', img:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80', tipo:'Nuevo proyecto', title:'Torre corporativa en San Benito',    desc:'Iniciamos uno de nuestros proyectos más grandes.' }
 ];
-const DEFAULT_CONFIG = { wa:'60707582', fb:'https://facebook.com/instaluvi', ig:'https://instagram.com/instaluvi' };
+const DEF_CONFIG = { wa:'60707582', fb:'https://facebook.com/instaluvi', ig:'https://instagram.com/instaluvi' };
 
-function getLS(key, def) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
-}
-function setLS(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
-}
+// Estado global (siempre cargado desde LS)
+let products  = LS.get('iv_products',  DEF_PRODUCTS);
+let gallery   = LS.get('iv_gallery',   DEF_GALLERY);
+let novedades = LS.get('iv_novedades', DEF_NOVEDADES);
+let config    = LS.get('iv_config',    DEF_CONFIG);
 
-let products = getLS('instaluvi_products', DEFAULT_PRODUCTS);
-let gallery  = getLS('instaluvi_gallery', DEFAULT_GALLERY);
-let novedades= getLS('instaluvi_novedades', DEFAULT_NOVEDADES);
-let config   = getLS('instaluvi_config', DEFAULT_CONFIG);
-
-function persist() {
-  setLS('instaluvi_products', products);
-  setLS('instaluvi_gallery', gallery);
-  setLS('instaluvi_novedades', novedades);
-  setLS('instaluvi_config', config);
+function save() {
+  LS.set('iv_products',  products);
+  LS.set('iv_gallery',   gallery);
+  LS.set('iv_novedades', novedades);
+  LS.set('iv_config',    config);
 }
 
-// ============================================================
+// =============================================================
 // WHATSAPP
-// ============================================================
+// =============================================================
 function openWA() {
   const msg = encodeURIComponent('Hola Instaluvi, me interesa cotizar un proyecto. ¿Podrían asesorarme?');
-  window.open(`https://wa.me/503${config.wa}?text=${msg}`, '_blank');
+  window.open('https://wa.me/503' + config.wa + '?text=' + msg, '_blank');
 }
 
-// ============================================================
-// RENDER PRODUCTS
-// ============================================================
+// =============================================================
+// RENDER PÚBLICO — Products
+// =============================================================
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
+  if (!grid) return;
   grid.innerHTML = products.map(p => `
-    <div class="product-card reveal">
+    <div class="product-card">
       <div class="product-img">
-        <img src="${p.img}" alt="${p.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'">
+        <img src="${p.img}" alt="${esc(p.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'">
         <div class="product-img-badge"><i class="fas fa-border-all"></i></div>
       </div>
       <div class="product-body">
-        <h3>${p.title}</h3>
-        <p>${p.desc}</p>
-        <a href="#" class="product-link" onclick="openWA(); return false;">Ver más &rarr;</a>
+        <h3>${esc(p.title)}</h3>
+        <p>${esc(p.desc)}</p>
+        <a href="#" class="product-link" onclick="openWA();return false;">Ver más &rarr;</a>
       </div>
-    </div>
-  `).join('');
-  observeReveal();
+    </div>`).join('');
 }
 
-// ============================================================
-// RENDER GALLERY
-// ============================================================
-let lightboxIndex = 0;
+// =============================================================
+// RENDER PÚBLICO — Gallery + Lightbox
+// =============================================================
+let lbIdx = 0;
+
 function renderGallery() {
   const grid = document.getElementById('galleryGrid');
+  if (!grid) return;
+  if (!gallery.length) { grid.innerHTML = '<p style="color:var(--gray);text-align:center;grid-column:1/-1">No hay imágenes aún.</p>'; return; }
   grid.innerHTML = gallery.map((g, i) => `
     <div class="gallery-item" onclick="openLightbox(${i})">
-      <img src="${g.img}" alt="${g.desc||''}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80'">
+      <img src="${g.img}" alt="${esc(g.desc||'')}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80'">
       <div class="gallery-overlay"><i class="fas fa-search-plus"></i></div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
+
 function openLightbox(i) {
-  lightboxIndex = i;
-  document.getElementById('lightbox-img').src = gallery[i].img;
+  lbIdx = ((i % gallery.length) + gallery.length) % gallery.length;
+  document.getElementById('lightbox-img').src = gallery[lbIdx].img;
   document.getElementById('lightbox').classList.add('active');
 }
 document.getElementById('lightbox-close').onclick = () => document.getElementById('lightbox').classList.remove('active');
-document.getElementById('lightbox-prev').onclick = () => { lightboxIndex = (lightboxIndex - 1 + gallery.length) % gallery.length; document.getElementById('lightbox-img').src = gallery[lightboxIndex].img; };
-document.getElementById('lightbox-next').onclick = () => { lightboxIndex = (lightboxIndex + 1) % gallery.length; document.getElementById('lightbox-img').src = gallery[lightboxIndex].img; };
-document.getElementById('lightbox').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('active'); });
+document.getElementById('lightbox-prev').onclick  = () => openLightbox(lbIdx - 1);
+document.getElementById('lightbox-next').onclick  = () => openLightbox(lbIdx + 1);
+document.getElementById('lightbox').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('active'); });
 
-// ============================================================
-// RENDER NOVEDADES (carousel)
-// ============================================================
-let carouselPos = 0;
-const CARD_W = 324; // 300px + 24px gap
+// =============================================================
+// RENDER PÚBLICO — Novedades carousel
+// =============================================================
+let carPos = 0;
+const CARD_W = 324;
+
 function renderNovedades() {
   const track = document.getElementById('carouselTrack');
+  if (!track) return;
+  if (!novedades.length) { track.innerHTML = '<p style="color:var(--gray);padding:20px">No hay novedades aún.</p>'; return; }
+  const fecha = new Date().toLocaleDateString('es-SV', { year:'numeric', month:'long' });
   track.innerHTML = novedades.map(n => `
     <div class="novedad-card">
       <div class="novedad-img">
-        <img src="${n.img}" alt="${n.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80'">
-        <span class="novedad-tag">${n.tipo}</span>
+        <img src="${n.img}" alt="${esc(n.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80'">
+        <span class="novedad-tag">${esc(n.tipo)}</span>
       </div>
       <div class="novedad-body">
-        <div class="novedad-date"><i class="fas fa-calendar-alt" style="margin-right:5px"></i>${new Date().toLocaleDateString('es-SV',{year:'numeric',month:'long'})}</div>
-        <h3>${n.title}</h3>
-        <p>${n.desc}</p>
+        <div class="novedad-date"><i class="fas fa-calendar-alt" style="margin-right:5px"></i>${fecha}</div>
+        <h3>${esc(n.title)}</h3>
+        <p>${esc(n.desc)}</p>
       </div>
-    </div>
-  `).join('');
-  carouselPos = 0;
+    </div>`).join('');
+  carPos = 0;
   track.style.transform = 'translateX(0)';
 }
+
 document.getElementById('carouselNext').onclick = () => {
-  const maxPos = Math.max(0, (novedades.length - 3) * CARD_W);
-  carouselPos = Math.min(carouselPos + CARD_W * 2, maxPos);
-  document.getElementById('carouselTrack').style.transform = `translateX(-${carouselPos}px)`;
+  const max = Math.max(0, (novedades.length - 3) * CARD_W);
+  carPos = Math.min(carPos + CARD_W * 2, max);
+  document.getElementById('carouselTrack').style.transform = 'translateX(-' + carPos + 'px)';
 };
 document.getElementById('carouselPrev').onclick = () => {
-  carouselPos = Math.max(0, carouselPos - CARD_W * 2);
-  document.getElementById('carouselTrack').style.transform = `translateX(-${carouselPos}px)`;
+  carPos = Math.max(0, carPos - CARD_W * 2);
+  document.getElementById('carouselTrack').style.transform = 'translateX(-' + carPos + 'px)';
 };
 
-// ============================================================
-// ADMIN PANEL - login gated
-// ============================================================
-function openLoginModal() {
-  document.getElementById('login-modal').classList.add('active');
-  document.getElementById('login-email').focus();
-  document.getElementById('login-error').classList.remove('show');
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-password').value = '';
-}
-function closeLoginModal() { document.getElementById('login-modal').classList.remove('active'); }
-document.getElementById('login-modal').addEventListener('click', function(e){ if(e.target===this) closeLoginModal(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape') { closeLoginModal(); closeAdmin(); closeEditModal(); } });
-document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-document.getElementById('login-email').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('login-password').focus(); });
-
-function togglePw() {
-  const inp = document.getElementById('login-password');
-  const eye = document.getElementById('pw-eye');
-  if(inp.type==='password') { inp.type='text'; eye.className='fas fa-eye-slash'; }
-  else { inp.type='password'; eye.className='fas fa-eye'; }
+// =============================================================
+// HELPER — escape HTML
+// =============================================================
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-password').value;
-  const btn   = document.getElementById('login-btn');
-  const errEl = document.getElementById('login-error');
-  const errMsg= document.getElementById('login-error-msg');
-  if(!email || !pass) { errMsg.textContent='Por favor ingresa correo y contraseña.'; errEl.classList.add('show'); return; }
-  errEl.classList.remove('show');
-  btn.classList.add('loading'); btn.disabled = true;
-  try {
-    const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js');
-    await signInWithEmailAndPassword(window._fbAuth, email, pass);
-    btn.classList.remove('loading'); btn.disabled = false;
-    closeLoginModal();
-    document.getElementById('admin-panel').classList.add('active');
-    renderAdminGallery(); renderAdminProducts(); renderAdminNovedades();
-  } catch(err) {
-    btn.classList.remove('loading'); btn.disabled = false;
-    const codes = { 'auth/user-not-found':'No existe una cuenta con ese correo.','auth/wrong-password':'Contraseña incorrecta.','auth/invalid-email':'El correo no tiene formato válido.','auth/too-many-requests':'Demasiados intentos. Intenta más tarde.','auth/invalid-credential':'Correo o contraseña incorrectos.' };
-    errMsg.textContent = codes[err.code] || 'Error al iniciar sesión. Verifica tus datos.';
-    errEl.classList.add('show');
-  }
-}
-
-function closeAdmin() { document.getElementById('admin-panel').classList.remove('active'); }
-document.getElementById('admin-panel').addEventListener('click', function(e){ if(e.target===this) closeAdmin(); });
-
-function switchAdminTab(tab, el) {
-  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  if(el) el.classList.add('active');
-  document.getElementById('admin-' + tab).classList.add('active');
-}
-
-// ============================================================
-// CLOUDINARY — Signed Upload (API Key + Secret)
-// cloud: dkfmnxxet
-// ============================================================
+// =============================================================
+// CLOUDINARY — Signed Upload con API Key + Secret
+// Funciona en HTTP, HTTPS y file://
+// =============================================================
 const CLD_CLOUD  = 'dkfmnxxet';
 const CLD_KEY    = '537957912329136';
 const CLD_SECRET = '5vHxhLhqu4nZVjx4-_sY7V5NKfI';
 
-// SHA-1 en browser puro usando SubtleCrypto
-async function sha1(str) {
-  const buf = new TextEncoder().encode(str);
-  const hash = await crypto.subtle.digest('SHA-1', buf);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+async function sha1hex(str) {
+  // Usar crypto.subtle si está disponible (HTTPS / localhost)
+  if (window.crypto && window.crypto.subtle) {
+    const buf  = new TextEncoder().encode(str);
+    const hash = await window.crypto.subtle.digest('SHA-1', buf);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+  // Fallback: SHA-1 puro JS (para HTTP sin TLS)
+  return sha1pure(str);
+}
+
+// SHA-1 puro en JS — funciona sin HTTPS
+function sha1pure(msg) {
+  function rotl(n,s){ return (n<<s)|(n>>>(32-s)); }
+  function tohex(n){ let s=''; for(let i=28;i>=0;i-=4) s+='0123456789abcdef'[(n>>i)&0xf]; return s; }
+  const bytes = unescape(encodeURIComponent(msg));
+  const W = []; let H0=0x67452301,H1=0xEFCDAB89,H2=0x98BADCFE,H3=0x10325476,H4=0xC3D2E1F0;
+  const words = []; let i;
+  for(i=0;i<bytes.length;i++) words[i>>2]|=bytes.charCodeAt(i)<<(24-(i%4)*8);
+  words[bytes.length>>2]|=0x80<<(24-(bytes.length%4)*8);
+  words[((bytes.length+8>>6)<<4)+15]=bytes.length*8;
+  for(let blk=0;blk<words.length;blk+=16){
+    for(i=0;i<16;i++) W[i]=words[blk+i]||0;
+    for(i=16;i<80;i++) W[i]=rotl(W[i-3]^W[i-8]^W[i-14]^W[i-16],1);
+    let a=H0,b=H1,c=H2,d=H3,e=H4,t;
+    for(i=0;i<80;i++){
+      if(i<20)      t=(rotl(a,5)+((b&c)|(~b&d))+e+W[i]+0x5A827999)|0;
+      else if(i<40) t=(rotl(a,5)+(b^c^d)+e+W[i]+0x6ED9EBA1)|0;
+      else if(i<60) t=(rotl(a,5)+((b&c)|(b&d)|(c&d))+e+W[i]+0x8F1BBCDC)|0;
+      else          t=(rotl(a,5)+(b^c^d)+e+W[i]+0xCA62C1D6)|0;
+      e=d;d=c;c=rotl(b,30);b=a;a=t;
+    }
+    H0=(H0+a)|0;H1=(H1+b)|0;H2=(H2+c)|0;H3=(H3+d)|0;H4=(H4+e)|0;
+  }
+  return tohex(H0)+tohex(H1)+tohex(H2)+tohex(H3)+tohex(H4);
 }
 
 async function uploadToCloudinary(file, onProgress) {
-  // 1. Parámetros a firmar (orden alfabético, sin api_key/file/resource_type)
   const timestamp = Math.floor(Date.now() / 1000);
   const folder    = 'instaluvi';
-  const paramStr  = `folder=${folder}&timestamp=${timestamp}${CLD_SECRET}`;
-  const signature = await sha1(paramStr);
+  // Firma: parámetros en orden alfabético + secret al final (sin espacios)
+  const toSign    = 'folder=' + folder + '&timestamp=' + timestamp + CLD_SECRET;
+  const signature = await sha1hex(toSign);
 
-  // 2. Construir FormData con firma
   const fd = new FormData();
   fd.append('file',      file);
   fd.append('api_key',   CLD_KEY);
-  fd.append('timestamp', timestamp);
+  fd.append('timestamp', String(timestamp));
   fd.append('signature', signature);
   fd.append('folder',    folder);
 
-  // 3. Subir con XHR para barra de progreso
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLD_CLOUD}/image/upload`, true);
+    xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload', true);
     xhr.timeout = 120000;
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
     };
 
     xhr.onload = () => {
-      if (xhr.status === 200) {
-        try {
-          const res = JSON.parse(xhr.responseText);
-          if (res.secure_url) {
-            resolve(res.secure_url);
-          } else {
-            reject(new Error(res.error?.message || 'Error: ' + JSON.stringify(res)));
-          }
-        } catch (_) {
-          reject(new Error('Respuesta inválida del servidor.'));
+      try {
+        const res = JSON.parse(xhr.responseText);
+        if (res.secure_url) {
+          resolve(res.secure_url);
+        } else {
+          const msg = (res.error && res.error.message) || xhr.responseText;
+          reject(new Error(msg));
         }
-      } else {
-        let msg = 'HTTP ' + xhr.status;
-        try { msg = JSON.parse(xhr.responseText).error?.message || msg; } catch (_) {}
-        reject(new Error(msg));
+      } catch (_) {
+        reject(new Error('Respuesta inválida (status ' + xhr.status + ')'));
       }
     };
-    xhr.onerror   = () => reject(new Error('Sin conexión con Cloudinary.'));
+    xhr.onerror   = () => reject(new Error('No se pudo conectar con Cloudinary.'));
     xhr.ontimeout = () => reject(new Error('Tiempo de espera agotado.'));
     xhr.send(fd);
   });
 }
 
-// ============================================================
-// GALERÍA ADMIN
-// ============================================================
-async function handleGalUpload(input) {
-  const files = Array.from(input.files);
-  if (!files.length) return;
+// Wrapper con UI de progreso
+async function doUpload(file, uploadingEl, barEl, statusEl) {
+  if (statusEl) statusEl.textContent = 'Subiendo ' + file.name + '…';
+  if (barEl) { barEl.style.transition = 'none'; barEl.style.width = '0%'; }
+  uploadingEl.classList.add('show');
 
-  const uploading  = document.getElementById('gal-uploading');
-  const statusSpan = uploading.querySelector('span');
-  const bar        = uploading.querySelector('.img-uploading-bar-inner');
-
-  uploading.classList.add('show');
-  let ok = 0, fail = 0;
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    statusSpan.textContent = `Subiendo ${i + 1} de ${files.length}: ${file.name}`;
-    if (bar) { bar.style.animation = 'none'; bar.style.width = '0%'; }
-
-    try {
-      const url = await uploadToCloudinary(file, (pct) => {
-        if (bar) bar.style.width = pct + '%';
-      });
-      gallery.push({
-        id: 'g' + Date.now() + Math.random().toString(36).slice(2),
-        img: url,
-        desc: file.name.replace(/\.[^.]+$/, '')
-      });
-      persist();
-      renderGallery();
-      renderAdminGallery();
-      ok++;
-    } catch (err) {
-      fail++;
-      console.error('Upload error:', err.message);
-    }
-  }
-
-  uploading.classList.remove('show');
-  if (bar) { bar.style.animation = ''; bar.style.width = '0%'; }
-  input.value = '';
-
-  if (fail > 0) {
-    alert(`⚠️ ${fail} imagen(es) fallaron al subir.\n\nError en consola (F12) para más detalles.`);
+  try {
+    const url = await uploadToCloudinary(file, pct => {
+      if (barEl) { barEl.style.transition = 'width .1s'; barEl.style.width = pct + '%'; }
+    });
+    return url;
+  } finally {
+    uploadingEl.classList.remove('show');
+    if (barEl) { barEl.style.width = '0%'; }
   }
 }
 
+// =============================================================
+// ADMIN — Galería upload (múltiples fotos)
+// =============================================================
+async function handleGalUpload(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const uploadingEl = document.getElementById('gal-uploading');
+  const barEl       = uploadingEl.querySelector('.img-uploading-bar-inner');
+  const statusEl    = uploadingEl.querySelector('span');
+  const errors      = [];
+
+  for (let i = 0; i < files.length; i++) {
+    if (statusEl) statusEl.textContent = 'Subiendo ' + (i+1) + '/' + files.length + ': ' + files[i].name;
+    if (barEl) { barEl.style.transition='none'; barEl.style.width='0%'; }
+    uploadingEl.classList.add('show');
+    try {
+      const url = await uploadToCloudinary(files[i], pct => {
+        if (barEl) { barEl.style.transition='width .1s'; barEl.style.width = pct+'%'; }
+      });
+      gallery.push({ id: 'g' + Date.now() + i, img: url, desc: files[i].name.replace(/\.[^.]+$/,'') });
+      save();
+      renderGallery();
+      renderAdminGallery();
+    } catch (err) {
+      errors.push(files[i].name + ': ' + err.message);
+    }
+  }
+
+  uploadingEl.classList.remove('show');
+  if (barEl) barEl.style.width = '0%';
+  input.value = '';
+
+  if (errors.length) alert('Error al subir:\n' + errors.join('\n'));
+}
+
 function deleteGalleryItem(id) {
-  if(!confirm('¿Eliminar esta imagen?')) return;
+  if (!confirm('¿Eliminar esta imagen?')) return;
   gallery = gallery.filter(g => g.id !== id);
-  persist(); renderGallery(); renderAdminGallery();
+  save(); renderGallery(); renderAdminGallery();
 }
 
 function renderAdminGallery() {
   const grid = document.getElementById('admin-gal-grid');
-  if(!gallery.length) { grid.innerHTML = '<p style="color:var(--gray);font-size:.8rem;grid-column:1/-1">No hay imágenes todavía.</p>'; return; }
+  if (!grid) return;
+  if (!gallery.length) { grid.innerHTML = '<p style="color:var(--gray);font-size:.8rem;grid-column:1/-1;padding:8px">No hay imágenes todavía.</p>'; return; }
   grid.innerHTML = gallery.map(g => `
     <div class="a-gal-item">
-      <img src="${g.img}" alt="${g.desc||''}">
+      <img src="${g.img}" alt="${esc(g.desc||'')}" onerror="this.src='https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400'">
       <button class="a-gal-del" onclick="deleteGalleryItem('${g.id}')"><i class="fas fa-trash"></i></button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-// ============================================================
-// PRODUCTOS ADMIN
-// ============================================================
+// =============================================================
+// ADMIN — Productos upload + CRUD
+// =============================================================
 async function handleProdImgUpload(input) {
   const file = input.files[0]; if (!file) return;
-  const uploading = document.getElementById('prod-uploading');
-  const bar = uploading.querySelector('.img-uploading-bar-inner');
-  if (bar) { bar.style.animation = 'none'; bar.style.width = '0%'; }
-  uploading.classList.add('show');
+  const uploadingEl = document.getElementById('prod-uploading');
+  const barEl       = uploadingEl.querySelector('.img-uploading-bar-inner');
+  const statusEl    = uploadingEl.querySelector('span');
+  if (statusEl) statusEl.textContent = 'Subiendo imagen…';
+  if (barEl) { barEl.style.transition='none'; barEl.style.width='0%'; }
+  uploadingEl.classList.add('show');
   try {
-    const url = await uploadToCloudinary(file, (pct) => {
-      if (bar) bar.style.width = pct + '%';
+    const url = await uploadToCloudinary(file, pct => {
+      if (barEl) { barEl.style.transition='width .1s'; barEl.style.width = pct+'%'; }
     });
     document.getElementById('prod-img-url').value = url;
-    const preview = document.getElementById('prod-preview');
-    preview.src = url;
+    const prev = document.getElementById('prod-preview');
+    prev.src = url; prev.style.display = 'block';
     document.getElementById('prod-zone').classList.add('has-img');
-  } catch (e) {
-    alert('⚠️ No se pudo subir la imagen.\n\n' + e.message);
+  } catch (err) {
+    alert('Error al subir imagen:\n' + err.message);
+  } finally {
+    uploadingEl.classList.remove('show');
+    if (barEl) barEl.style.width = '0%';
+    input.value = '';
   }
-  uploading.classList.remove('show');
-  if (bar) { bar.style.animation = ''; bar.style.width = '0%'; }
-  input.value = '';
 }
 
 function saveProduct() {
-  const id    = document.getElementById('prod-edit-id').value;
-  const img   = document.getElementById('prod-img-url').value;
+  const id    = document.getElementById('prod-edit-id').value.trim();
+  const img   = document.getElementById('prod-img-url').value.trim();
   const title = document.getElementById('prod-title').value.trim();
   const desc  = document.getElementById('prod-desc').value.trim();
-  if(!title) return alert('Escribe el nombre del producto.');
-  if(!img)   return alert('Sube una imagen primero.');
-  const obj = { id: id || 'p'+Date.now(), img, title, desc };
-  if(id) { const i = products.findIndex(p=>p.id===id); if(i>-1) products[i]=obj; }
+  if (!title) return alert('Escribe el nombre del producto.');
+  if (!img)   return alert('Sube una imagen primero.');
+  const obj = { id: id || 'p' + Date.now(), img, title, desc };
+  if (id) { const idx = products.findIndex(p => p.id === id); if (idx > -1) products[idx] = obj; else products.push(obj); }
   else products.push(obj);
-  persist(); renderProducts(); renderAdminProducts(); clearProductForm();
+  save(); renderProducts(); renderAdminProducts(); clearProductForm();
 }
 
 function clearProductForm() {
-  document.getElementById('prod-edit-id').value = '';
-  document.getElementById('prod-img-url').value = '';
-  document.getElementById('prod-title').value = '';
-  document.getElementById('prod-desc').value = '';
-  document.getElementById('prod-preview').src = '';
-  document.getElementById('prod-zone').classList.remove('has-img');
+  ['prod-edit-id','prod-img-url','prod-title','prod-desc'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  const prev = document.getElementById('prod-preview'); if(prev){ prev.src=''; prev.style.display='none'; }
+  const zone = document.getElementById('prod-zone'); if(zone) zone.classList.remove('has-img');
 }
 
 function editProductAdmin(id) {
-  const p = products.find(p=>p.id===id); if(!p) return;
-  // Open edit modal
+  const p = products.find(p => p.id === id); if (!p) return;
   document.getElementById('edit-modal-title').textContent = 'Editar producto';
   document.getElementById('edit-modal-body').innerHTML = `
-    <div class="a-field"><label>Nombre</label><input type="text" id="em-prod-title" value="${p.title}"></div>
-    <div class="a-field"><label>Descripción</label><textarea id="em-prod-desc">${p.desc}</textarea></div>
-  `;
+    <div class="a-field"><label>Nombre</label><input type="text" id="em-title" value="${esc(p.title)}"></div>
+    <div class="a-field"><label>Descripción</label><textarea id="em-desc">${esc(p.desc)}</textarea></div>`;
   document.getElementById('edit-modal-save').onclick = () => {
-    p.title = document.getElementById('em-prod-title').value.trim() || p.title;
-    p.desc  = document.getElementById('em-prod-desc').value.trim();
-    persist(); renderProducts(); renderAdminProducts(); closeEditModal();
+    p.title = document.getElementById('em-title').value.trim() || p.title;
+    p.desc  = document.getElementById('em-desc').value.trim();
+    save(); renderProducts(); renderAdminProducts(); closeEditModal();
   };
   document.getElementById('edit-modal').classList.add('active');
 }
 
 function deleteProduct(id) {
-  if(!confirm('¿Eliminar este producto?')) return;
-  products = products.filter(p=>p.id!==id);
-  persist(); renderProducts(); renderAdminProducts();
+  if (!confirm('¿Eliminar este producto?')) return;
+  products = products.filter(p => p.id !== id);
+  save(); renderProducts(); renderAdminProducts();
 }
 
 function renderAdminProducts() {
-  const c = document.getElementById('admin-prod-cards');
-  if(!products.length) { c.innerHTML='<p style="color:var(--gray);font-size:.8rem;grid-column:1/-1">No hay productos.</p>'; return; }
+  const c = document.getElementById('admin-prod-cards'); if (!c) return;
+  if (!products.length) { c.innerHTML = '<p style="color:var(--gray);font-size:.8rem;grid-column:1/-1">No hay productos.</p>'; return; }
   c.innerHTML = products.map(p => `
     <div class="a-card">
-      <img class="a-card-img" src="${p.img}" alt="${p.title}" onerror="this.style.background='#e5e7eb'">
+      <img class="a-card-img" src="${p.img}" alt="${esc(p.title)}" onerror="this.style.background='#e5e7eb'">
       <div class="a-card-body">
-        <div class="a-card-title">${p.title}</div>
-        <div class="a-card-sub">${p.desc.substring(0,40)}${p.desc.length>40?'…':''}</div>
+        <div class="a-card-title">${esc(p.title)}</div>
+        <div class="a-card-sub">${esc(p.desc.substring(0,50))}${p.desc.length>50?'…':''}</div>
       </div>
       <div class="a-card-actions">
         <button class="a-card-btn a-card-btn-edit" onclick="editProductAdmin('${p.id}')"><i class="fas fa-pen"></i></button>
-        <button class="a-card-btn a-card-btn-del" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
+        <button class="a-card-btn a-card-btn-del"  onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-// ============================================================
-// NOVEDADES ADMIN
-// ============================================================
+// =============================================================
+// ADMIN — Novedades upload + CRUD
+// =============================================================
 async function handleNovImgUpload(input) {
   const file = input.files[0]; if (!file) return;
-  const uploading = document.getElementById('nov-uploading');
-  const bar = uploading.querySelector('.img-uploading-bar-inner');
-  if (bar) { bar.style.animation = 'none'; bar.style.width = '0%'; }
-  uploading.classList.add('show');
+  const uploadingEl = document.getElementById('nov-uploading');
+  const barEl       = uploadingEl.querySelector('.img-uploading-bar-inner');
+  const statusEl    = uploadingEl.querySelector('span');
+  if (statusEl) statusEl.textContent = 'Subiendo imagen…';
+  if (barEl) { barEl.style.transition='none'; barEl.style.width='0%'; }
+  uploadingEl.classList.add('show');
   try {
-    const url = await uploadToCloudinary(file, (pct) => {
-      if (bar) bar.style.width = pct + '%';
+    const url = await uploadToCloudinary(file, pct => {
+      if (barEl) { barEl.style.transition='width .1s'; barEl.style.width = pct+'%'; }
     });
     document.getElementById('nov-img-url').value = url;
-    const preview = document.getElementById('nov-preview');
-    preview.src = url;
+    const prev = document.getElementById('nov-preview');
+    prev.src = url; prev.style.display = 'block';
     document.getElementById('nov-zone').classList.add('has-img');
-  } catch (e) {
-    alert('⚠️ No se pudo subir la imagen.\n\n' + e.message);
+  } catch (err) {
+    alert('Error al subir imagen:\n' + err.message);
+  } finally {
+    uploadingEl.classList.remove('show');
+    if (barEl) barEl.style.width = '0%';
+    input.value = '';
   }
-  uploading.classList.remove('show');
-  if (bar) { bar.style.animation = ''; bar.style.width = '0%'; }
-  input.value = '';
 }
 
 function saveNovedad() {
-  const id    = document.getElementById('nov-edit-id').value;
-  const img   = document.getElementById('nov-img-url').value;
+  const id    = document.getElementById('nov-edit-id').value.trim();
+  const img   = document.getElementById('nov-img-url').value.trim();
   const tipo  = document.getElementById('nov-tipo').value;
   const title = document.getElementById('nov-title').value.trim();
   const desc  = document.getElementById('nov-desc').value.trim();
-  if(!title) return alert('Escribe el título.');
-  if(!img)   return alert('Sube una imagen primero.');
-  const obj = { id: id || 'n'+Date.now(), img, tipo, title, desc };
-  if(id) { const i = novedades.findIndex(n=>n.id===id); if(i>-1) novedades[i]=obj; }
+  if (!title) return alert('Escribe el título.');
+  if (!img)   return alert('Sube una imagen primero.');
+  const obj = { id: id || 'n' + Date.now(), img, tipo, title, desc };
+  if (id) { const idx = novedades.findIndex(n => n.id === id); if (idx > -1) novedades[idx] = obj; else novedades.push(obj); }
   else novedades.push(obj);
-  persist(); renderNovedades(); renderAdminNovedades(); clearNovedadForm();
+  save(); renderNovedades(); renderAdminNovedades(); clearNovedadForm();
 }
 
 function clearNovedadForm() {
-  document.getElementById('nov-edit-id').value = '';
-  document.getElementById('nov-img-url').value = '';
-  document.getElementById('nov-title').value = '';
-  document.getElementById('nov-desc').value = '';
-  document.getElementById('nov-preview').src = '';
-  document.getElementById('nov-zone').classList.remove('has-img');
+  ['nov-edit-id','nov-img-url','nov-title','nov-desc'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  const prev = document.getElementById('nov-preview'); if(prev){ prev.src=''; prev.style.display='none'; }
+  const zone = document.getElementById('nov-zone'); if(zone) zone.classList.remove('has-img');
 }
 
 function editNovedadAdmin(id) {
-  const n = novedades.find(n=>n.id===id); if(!n) return;
+  const n = novedades.find(n => n.id === id); if (!n) return;
   document.getElementById('edit-modal-title').textContent = 'Editar novedad';
   document.getElementById('edit-modal-body').innerHTML = `
-    <div class="a-field"><label>Tipo</label><select id="em-nov-tipo"><option${n.tipo==='Noticia'?' selected':''}>Noticia</option><option${n.tipo==='Promoción'?' selected':''}>Promoción</option><option${n.tipo==='Nuevo producto'?' selected':''}>Nuevo producto</option><option${n.tipo==='Nuevo proyecto'?' selected':''}>Nuevo proyecto</option></select></div>
-    <div class="a-field"><label>Título</label><input type="text" id="em-nov-title" value="${n.title}"></div>
-    <div class="a-field"><label>Descripción</label><textarea id="em-nov-desc">${n.desc}</textarea></div>
-  `;
+    <div class="a-field"><label>Tipo</label>
+      <select id="em-tipo">
+        ${['Noticia','Promoción','Nuevo producto','Nuevo proyecto'].map(t=>`<option${n.tipo===t?' selected':''}>${t}</option>`).join('')}
+      </select></div>
+    <div class="a-field"><label>Título</label><input type="text" id="em-title" value="${esc(n.title)}"></div>
+    <div class="a-field"><label>Descripción</label><textarea id="em-desc">${esc(n.desc)}</textarea></div>`;
   document.getElementById('edit-modal-save').onclick = () => {
-    n.tipo  = document.getElementById('em-nov-tipo').value;
-    n.title = document.getElementById('em-nov-title').value.trim() || n.title;
-    n.desc  = document.getElementById('em-nov-desc').value.trim();
-    persist(); renderNovedades(); renderAdminNovedades(); closeEditModal();
+    n.tipo  = document.getElementById('em-tipo').value;
+    n.title = document.getElementById('em-title').value.trim() || n.title;
+    n.desc  = document.getElementById('em-desc').value.trim();
+    save(); renderNovedades(); renderAdminNovedades(); closeEditModal();
   };
   document.getElementById('edit-modal').classList.add('active');
 }
 
 function deleteNovedad(id) {
-  if(!confirm('¿Eliminar esta novedad?')) return;
-  novedades = novedades.filter(n=>n.id!==id);
-  persist(); renderNovedades(); renderAdminNovedades();
+  if (!confirm('¿Eliminar esta novedad?')) return;
+  novedades = novedades.filter(n => n.id !== id);
+  save(); renderNovedades(); renderAdminNovedades();
 }
 
 function renderAdminNovedades() {
-  const c = document.getElementById('admin-nov-cards');
-  if(!novedades.length) { c.innerHTML='<p style="color:var(--gray);font-size:.8rem;grid-column:1/-1">No hay novedades.</p>'; return; }
+  const c = document.getElementById('admin-nov-cards'); if (!c) return;
+  if (!novedades.length) { c.innerHTML = '<p style="color:var(--gray);font-size:.8rem;grid-column:1/-1">No hay novedades.</p>'; return; }
   c.innerHTML = novedades.map(n => `
     <div class="a-card">
-      <img class="a-card-img" src="${n.img}" alt="${n.title}" onerror="this.style.background='#e5e7eb'">
+      <img class="a-card-img" src="${n.img}" alt="${esc(n.title)}" onerror="this.style.background='#e5e7eb'">
       <div class="a-card-body">
-        <div class="a-card-title">${n.title}</div>
-        <div class="a-card-sub">${n.tipo}</div>
+        <div class="a-card-title">${esc(n.title)}</div>
+        <div class="a-card-sub">${esc(n.tipo)}</div>
       </div>
       <div class="a-card-actions">
         <button class="a-card-btn a-card-btn-edit" onclick="editNovedadAdmin('${n.id}')"><i class="fas fa-pen"></i></button>
-        <button class="a-card-btn a-card-btn-del" onclick="deleteNovedad('${n.id}')"><i class="fas fa-trash"></i></button>
+        <button class="a-card-btn a-card-btn-del"  onclick="deleteNovedad('${n.id}')"><i class="fas fa-trash"></i></button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-// ============================================================
-// CONFIG
-// ============================================================
+// =============================================================
+// ADMIN — Config
+// =============================================================
 function loadConfig() {
-  document.getElementById('cfg-wa').value = config.wa||'';
-  document.getElementById('cfg-fb').value = config.fb||'';
-  document.getElementById('cfg-ig').value = config.ig||'';
+  const wa = document.getElementById('cfg-wa'); if(wa) wa.value = config.wa || '';
+  const fb = document.getElementById('cfg-fb'); if(fb) fb.value = config.fb || '';
+  const ig = document.getElementById('cfg-ig'); if(ig) ig.value = config.ig || '';
 }
 function saveConfig() {
-  config.wa = document.getElementById('cfg-wa').value.trim() || config.wa;
-  config.fb = document.getElementById('cfg-fb').value.trim() || config.fb;
-  config.ig = document.getElementById('cfg-ig').value.trim() || config.ig;
-  persist();
+  config.wa = (document.getElementById('cfg-wa').value || '').trim() || config.wa;
+  config.fb = (document.getElementById('cfg-fb').value || '').trim() || config.fb;
+  config.ig = (document.getElementById('cfg-ig').value || '').trim() || config.ig;
+  save();
   const fbEl = document.getElementById('footer-fb'); if(fbEl) fbEl.href = config.fb;
   const igEl = document.getElementById('footer-ig'); if(igEl) igEl.href = config.ig;
-  alert('✓ Configuración guardada.');
+  alert('Configuración guardada.');
 }
 
-// ============================================================
-// EDIT MODAL
-// ============================================================
-function closeEditModal() { document.getElementById('edit-modal').classList.remove('active'); }
-document.getElementById('edit-modal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
+// =============================================================
+// ADMIN — Panel + tabs
+// =============================================================
+function openLoginModal() {
+  document.getElementById('login-modal').classList.add('active');
+  setTimeout(() => { const el = document.getElementById('login-email'); if(el) el.focus(); }, 100);
+  const err = document.getElementById('login-error'); if(err) err.classList.remove('show');
+  const em = document.getElementById('login-email'); if(em) em.value = '';
+  const pw = document.getElementById('login-password'); if(pw) pw.value = '';
+}
+function closeLoginModal() { document.getElementById('login-modal').classList.remove('active'); }
+document.getElementById('login-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeLoginModal(); });
 
-// ============================================================
-// HAMBURGER MENU
-// ============================================================
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('login-email').addEventListener('keydown',    e => { if (e.key === 'Enter') document.getElementById('login-password').focus(); });
+
+function togglePw() {
+  const inp = document.getElementById('login-password');
+  const eye = document.getElementById('pw-eye');
+  if (inp.type === 'password') { inp.type = 'text';     eye.className = 'fas fa-eye-slash'; }
+  else                         { inp.type = 'password'; eye.className = 'fas fa-eye'; }
+}
+
+async function doLogin() {
+  const email = (document.getElementById('login-email').value || '').trim();
+  const pass  = document.getElementById('login-password').value || '';
+  const btn   = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const errMsg= document.getElementById('login-error-msg');
+
+  if (!email || !pass) { errMsg.textContent = 'Ingresa correo y contraseña.'; errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  try {
+    const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js');
+    await signInWithEmailAndPassword(window._fbAuth, email, pass);
+    closeLoginModal();
+    openAdmin();
+  } catch (err) {
+    const codes = {
+      'auth/user-not-found':   'No existe cuenta con ese correo.',
+      'auth/wrong-password':   'Contraseña incorrecta.',
+      'auth/invalid-email':    'Formato de correo inválido.',
+      'auth/too-many-requests':'Demasiados intentos. Espera un momento.',
+      'auth/invalid-credential':'Correo o contraseña incorrectos.'
+    };
+    errMsg.textContent = codes[err.code] || ('Error: ' + err.message);
+    errEl.classList.add('show');
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+function openAdmin() {
+  document.getElementById('admin-panel').classList.add('active');
+  // Cargar todas las listas al abrir
+  renderAdminGallery();
+  renderAdminProducts();
+  renderAdminNovedades();
+  loadConfig();
+}
+function closeAdmin() { document.getElementById('admin-panel').classList.remove('active'); }
+document.getElementById('admin-panel').addEventListener('click', e => { if (e.target === e.currentTarget) closeAdmin(); });
+
+function switchAdminTab(tab, el) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const sec = document.getElementById('admin-' + tab); if(sec) sec.classList.add('active');
+  // Re-render al cambiar de tab para asegurar datos frescos
+  if (tab === 'galeria')   renderAdminGallery();
+  if (tab === 'productos') renderAdminProducts();
+  if (tab === 'novedades') renderAdminNovedades();
+  if (tab === 'config')    loadConfig();
+}
+
+// =============================================================
+// EDIT MODAL
+// =============================================================
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('active'); }
+document.getElementById('edit-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
+
+// =============================================================
+// MOBILE MENU
+// =============================================================
 document.getElementById('hamburger').onclick = () => {
   document.getElementById('mobileMenu').classList.add('open');
   document.getElementById('mobileOverlay').classList.add('active');
@@ -1658,63 +1712,71 @@ function closeMobile() {
   document.getElementById('mobileOverlay').classList.remove('active');
 }
 
-// ============================================================
+// =============================================================
+// ESC cierra todo
+// =============================================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeLoginModal(); closeAdmin(); closeEditModal(); closeMobile(); }
+});
+
+// =============================================================
 // SCROLL REVEAL
-// ============================================================
+// =============================================================
 function observeReveal() {
-  const els = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-  }, { threshold: 0.12 });
-  els.forEach(el => io.observe(el));
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => {
+    if (!el.classList.contains('visible')) io.observe(el);
+  });
 }
 
-// ============================================================
-// COUNTERS
-// ============================================================
+// =============================================================
+// ANIMACIÓN CONTADORES
+// =============================================================
 function animateCounters() {
-  const counters = document.querySelectorAll('.counter');
-  const io = new IntersectionObserver((entries) => {
+  const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
-      if(e.isIntersecting && !e.target.dataset.done) {
+      if (e.isIntersecting && !e.target.dataset.done) {
         e.target.dataset.done = '1';
-        const target = parseInt(e.target.dataset.target);
-        const duration = 1800;
-        const step = target / (duration / 16);
-        let current = 0;
-        const timer = setInterval(() => {
-          current += step;
-          if(current >= target) { current = target; clearInterval(timer); }
-          e.target.textContent = Math.floor(current).toLocaleString();
+        const target = parseInt(e.target.dataset.target) || 0;
+        const step   = target / (1800 / 16);
+        let cur = 0;
+        const t = setInterval(() => {
+          cur += step;
+          if (cur >= target) { cur = target; clearInterval(t); }
+          e.target.textContent = Math.floor(cur).toLocaleString();
         }, 16);
         io.unobserve(e.target);
       }
     });
   }, { threshold: 0.5 });
-  counters.forEach(c => io.observe(c));
+  document.querySelectorAll('.counter').forEach(c => io.observe(c));
 }
 
-// ============================================================
+// =============================================================
 // NAVBAR SCROLL
-// ============================================================
+// =============================================================
 window.addEventListener('scroll', () => {
   const nb = document.getElementById('navbar');
-  if(window.scrollY > 20) nb.style.boxShadow = '0 4px 24px rgba(0,0,0,0.12)';
-  else nb.style.boxShadow = '0 2px 16px rgba(0,0,0,0.08)';
+  if (!nb) return;
+  nb.style.boxShadow = window.scrollY > 20 ? '0 4px 24px rgba(0,0,0,0.12)' : '0 2px 16px rgba(0,0,0,0.08)';
 });
 
-// ============================================================
-// INIT
-// ============================================================
+// =============================================================
+// INIT — se ejecuta cuando el DOM está listo
+// =============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Render del sitio público con datos de LS
   renderProducts();
   renderGallery();
   renderNovedades();
-  loadConfig();
-  const fbEl = document.getElementById('footer-fb');
-  const igEl = document.getElementById('footer-ig');
-  if(fbEl && config.fb) fbEl.href = config.fb;
-  if(igEl && config.ig) igEl.href = config.ig;
+
+  // Aplicar config guardada
+  const fbEl = document.getElementById('footer-fb'); if(fbEl && config.fb) fbEl.href = config.fb;
+  const igEl = document.getElementById('footer-ig'); if(igEl && config.ig) igEl.href = config.ig;
+
+  // Animaciones
   observeReveal();
   animateCounters();
 });
